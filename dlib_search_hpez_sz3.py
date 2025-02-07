@@ -20,6 +20,7 @@ parser.add_argument('--upper_tol_rate',"-ut",type=float,default=1.0, help='Tune 
 parser.add_argument('--lower_tol_rate',"-lt",type=float,default=0.95, help='Tune lower tol rate')
 parser.add_argument('--upper_bound',"-ub",type=float,default=1.0, help='Tune upper bound (in VR-REL data eb)')
 parser.add_argument('--lower_bound',"-lb",type=float,default=0.0, help='Tune lower bound (in VR-REL data eb)')
+parser.add_argument('--scale',"-s",type=float,default=1e12, help='Loss scaling factor')
 args = parser.parse_args()
 inputName = args.input 
 numDims = args.dim 
@@ -27,6 +28,7 @@ dimSeq = " ".join(args.dims)
 dataEB = args.data_eb  
 QoIEB = args.qoi_eb 
 maxIter = args.max_iter 
+scaling_factor = args.scale
 ub = min(args.upper_bound,dataEB) 
 lb = args.lower_bound
 
@@ -50,7 +52,7 @@ best_eb = -1
 best_cr = 0
 best_log = ""
 def loss_function(rel_error_bound):
-    global iteration, time_cost, target,best_eb,best_cr,best_log,iteration
+    global iteration, time_cost, target,best_eb,best_cr,best_log,iteration,scaling_factor
     command = "%s -z -f -a -%d %s -i %s -o %s.hpez.out -M REL %.8E;%s -f -%d %s -i %s -o %s.hpez.out -c %s;rm -f %s*" % \
     (args.cmp_command, numDims, dimSeq, inputName, pid, rel_error_bound, args.val_command, numDims, dimSeq, inputName, pid, args.config, pid)
     time = 0
@@ -89,7 +91,7 @@ def loss_function(rel_error_bound):
         sys.exit()
         return 0
     else: 
-        return (rel_qoi_error-target)**2
+        return scaling_factor*(rel_qoi_error-target)**2
 
 
 best_eb,_ = find_min_global(loss_function,[lb],[ub],maxIter)#second: eb low bound, third: eb high bound

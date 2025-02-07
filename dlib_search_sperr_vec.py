@@ -20,6 +20,8 @@ parser.add_argument('--upper_tol_rate',"-ut",type=float,default=1.0, help='Tune 
 parser.add_argument('--lower_tol_rate',"-lt",type=float,default=0.95, help='Tune lower tol rate')
 parser.add_argument('--upper_bound',"-ub",type=float,default=1.0, help='Tune upper bound (in VR-REL data eb)')
 parser.add_argument('--lower_bound',"-lb",type=float,default=0.0, help='Tune lower bound (in VR-REL data eb)')
+parser.add_argument('--scale',"-s",type=float,default=1e12, help='Loss scaling factor')
+
 args = parser.parse_args()
 inputNames = args.inputs 
 numDims = args.dim 
@@ -29,6 +31,7 @@ QoIEB = args.qoi_eb
 maxIter = args.max_iter 
 ub = min(args.upper_bound,dataEB) 
 lb = args.lower_bound
+scaling_factor = args.scale
 
 ut = args.upper_tol_rate
 lt = args.lower_tol_rate
@@ -50,7 +53,7 @@ best_cr = 0
 best_log = ""
 target = QoIEB # target qoi error bound
 def loss_function(rel_error_bound):
-    global iteration, time_cost, target,best_eb,best_cr,best_log,iteration
+    global iteration, time_cost, target,best_eb,best_cr,best_log,iteration,scaling_factor
     command = "%s %s -c --omp 1 --ftype 32 --print_stats --dims %s --bitstream %s.sperr1 --decomp_f %s.sperr.out1 --pwe %.8E;%s %s -c --omp 1 --ftype 32 --print_stats --dims %s --bitstream %s.sperr2 --decomp_f %s.sperr.out2 --pwe %.4E;%s %s -c --omp 1 --ftype 32 --print_stats --dims %s --bitstream %s.sperr3 --decomp_f %s.sperr.out3 --pwe %.4E;%s -f -%d %s -i %s -o %s.sperr.out1 %s.sperr.out2 %s.sperr.out3 -c %s;rm -f %s*" % \
     (args.cmp_command, inputNames[0], dimSeq, pid, pid, rel_error_bound*data_ranges[0],args.cmp_command, inputNames[1], dimSeq, pid, pid, rel_error_bound*data_ranges[1],args.cmp_command, inputNames[2], dimSeq, pid, pid, rel_error_bound*data_ranges[2], args.val_command, numDims, dimSeq, " ".join(inputNames), pid, pid, pid, args.config, pid)
     time = 0
@@ -87,7 +90,7 @@ def loss_function(rel_error_bound):
         sys.exit()
         return 0
     else: 
-        return (rel_qoi_error-target)**2
+        return scaling_factor*(rel_qoi_error-target)**2
 
 
 best_eb,_ = find_min_global(loss_function,[lb],[ub],maxIter)#second: eb low bound, third: eb high bound
