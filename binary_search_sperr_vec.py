@@ -48,6 +48,39 @@ def binary_search(target,start,end, max_iter = 100):
     best_eb = start
     best_log = ""
     best_cr = 0
+
+    eb = end
+    command = "%s %s -c --omp 1 --ftype 32 --print_stats --dims %s --bitstream %s.sperr1 --decomp_f %s.sperr.out1 --pwe %.8E;%s %s -c --omp 1 --ftype 32 --print_stats --dims %s --bitstream %s.sperr2 --decomp_f %s.sperr.out2 --pwe %.4E;%s %s -c --omp 1 --ftype 32 --print_stats --dims %s --bitstream %s.sperr3 --decomp_f %s.sperr.out3 --pwe %.4E;%s -f -%d %s -i %s -o %s.sperr.out1 %s.sperr.out2 %s.sperr.out3 -c %s;rm -f %s*" % \
+    (args.cmp_command, inputNames[0], dimSeq, pid, pid, eb*data_ranges[0],args.cmp_command, inputNames[1], dimSeq, pid, pid, eb*data_ranges[1],args.cmp_command, inputNames[2], dimSeq, pid, pid, eb*data_ranges[2], args.val_command, numDims, dimSeq, " ".join(inputNames), pid, pid, pid, args.config, pid)
+    time = 0
+    br = 0 
+#print(command)
+    with os.popen(command) as f:
+        log=f.read()
+        for line in log.splitlines():
+        #print(line)
+            if "relative qoi error" in line:
+                rel_qoi_error = eval(line.split("=")[-1])
+            if line[0] == "Q" and "QoI validation time" in line:
+                time += eval(line.split("=")[-1].split("s")[0])
+            if line[0] == "C" and "Compression time" in line:
+                time += eval(line.split("=")[-1].split("s")[0])
+            if "Bitrate" in line:
+                br += eval(line.split(",")[0].split("=")[-1])
+    br /= 3.0
+    cr = 32.0/br
+    iteration += 1
+    print("Round %d, error bound = %.8E, CR = %.4f, QoI relative error = %.4E, time cost = %.4f" % (iteration, eb, cr, rel_qoi_error,time))
+    time_cost +=time
+
+    if rel_qoi_error <=ut*target:
+        best_eb = eb 
+        best_log = log 
+        best_cr = cr
+        return best_eb,best_cr, iteration,time_cost,best_log
+
+
+
     while 1:
         eb = (start+end)/2
         command = "%s %s -c --omp 1 --ftype 32 --print_stats --dims %s --bitstream %s.sperr1 --decomp_f %s.sperr.out1 --pwe %.8E;%s %s -c --omp 1 --ftype 32 --print_stats --dims %s --bitstream %s.sperr2 --decomp_f %s.sperr.out2 --pwe %.4E;%s %s -c --omp 1 --ftype 32 --print_stats --dims %s --bitstream %s.sperr3 --decomp_f %s.sperr.out3 --pwe %.4E;%s -f -%d %s -i %s -o %s.sperr.out1 %s.sperr.out2 %s.sperr.out3 -c %s;rm -f %s*" % \

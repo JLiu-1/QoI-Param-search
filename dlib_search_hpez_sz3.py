@@ -52,7 +52,7 @@ best_eb = -1
 best_cr = 0
 best_log = ""
 def loss_function(rel_error_bound):
-    global iteration, time_cost, target,best_eb,best_cr,best_log,iteration,scaling_factor
+    global iteration, time_cost, target,best_eb,best_cr,best_log,iteration,scaling_factor,ub
     command = "%s -z -f -a -%d %s -i %s -o %s.hpez.out -M REL %.8E;%s -f -%d %s -i %s -o %s.hpez.out -c %s;rm -f %s*" % \
     (args.cmp_command, numDims, dimSeq, inputName, pid, rel_error_bound, args.val_command, numDims, dimSeq, inputName, pid, args.config, pid)
     time = 0
@@ -84,17 +84,19 @@ def loss_function(rel_error_bound):
             best_eb = rel_error_bound
             best_log = log
 
-    if rel_qoi_error >= lt*target and rel_qoi_error <= ut*target:
-        print("Best compression log:")
-        print(best_log)
-        print("Terminated after %d rounds. Best error bound = %.8E, best CR = %.4f, total time cost = %.4f" % (iteration, best_eb, best_cr,time_cost))
-        sys.exit()
-        return 0
+        if rel_qoi_error >= lt*target or rel_error_bound >= ub*0.99:
+            print("Best compression log:")
+            print(best_log)
+            print("Terminated after %d rounds. Best error bound = %.8E, best CR = %.4f, total time cost = %.4f" % (iteration, best_eb, best_cr,time_cost))
+            sys.exit()
+            return 0
     else: 
         return scaling_factor*(rel_qoi_error-target)**2
 
 
-best_eb,_ = find_min_global(loss_function,[lb],[ub],maxIter)#second: eb low bound, third: eb high bound
+_ = loss_function(ub)
+
+best_eb,_ = find_min_global(loss_function,[lb],[ub],maxIter-1)#second: eb low bound, third: eb high bound
 print("Best compression log:")
 print(best_log)
 print("Terminated after %d rounds. Best error bound = %.8E, best CR = %.4f, total time cost = %.4f" % (iteration, best_eb, best_cr,time_cost))

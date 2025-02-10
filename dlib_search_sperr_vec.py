@@ -53,7 +53,7 @@ best_cr = 0
 best_log = ""
 target = QoIEB # target qoi error bound
 def loss_function(rel_error_bound):
-    global iteration, time_cost, target,best_eb,best_cr,best_log,iteration,scaling_factor
+    global iteration, time_cost, target,best_eb,best_cr,best_log,iteration,scaling_factor,ub
     command = "%s %s -c --omp 1 --ftype 32 --print_stats --dims %s --bitstream %s.sperr1 --decomp_f %s.sperr.out1 --pwe %.8E;%s %s -c --omp 1 --ftype 32 --print_stats --dims %s --bitstream %s.sperr2 --decomp_f %s.sperr.out2 --pwe %.4E;%s %s -c --omp 1 --ftype 32 --print_stats --dims %s --bitstream %s.sperr3 --decomp_f %s.sperr.out3 --pwe %.4E;%s -f -%d %s -i %s -o %s.sperr.out1 %s.sperr.out2 %s.sperr.out3 -c %s;rm -f %s*" % \
     (args.cmp_command, inputNames[0], dimSeq, pid, pid, rel_error_bound*data_ranges[0],args.cmp_command, inputNames[1], dimSeq, pid, pid, rel_error_bound*data_ranges[1],args.cmp_command, inputNames[2], dimSeq, pid, pid, rel_error_bound*data_ranges[2], args.val_command, numDims, dimSeq, " ".join(inputNames), pid, pid, pid, args.config, pid)
     time = 0
@@ -83,17 +83,17 @@ def loss_function(rel_error_bound):
             best_eb = eb
             best_log = log
 
-    if rel_qoi_error >= lt*target and rel_qoi_error <= ut*target:
-        print("Best compression log:")
-        print(best_log)
-        print("Terminated after %d rounds. Best error bound = %.8E, best CR = %.4f, total time cost = %.4f" % (iteration, best_eb, best_cr,time_cost))
-        sys.exit()
-        return 0
+        if rel_qoi_error >= lt*target or rel_error_bound >= ub*0.99:
+            print("Best compression log:")
+            print(best_log)
+            print("Terminated after %d rounds. Best error bound = %.8E, best CR = %.4f, total time cost = %.4f" % (iteration, best_eb, best_cr,time_cost))
+            sys.exit()
+            return 0
     else: 
         return scaling_factor*(rel_qoi_error-target)**2
 
-
-best_eb,_ = find_min_global(loss_function,[lb],[ub],maxIter)#second: eb low bound, third: eb high bound
+_ = loss_function(ub)
+best_eb,_ = find_min_global(loss_function,[lb],[ub],maxIter-1)#second: eb low bound, third: eb high bound
 print("Best compression log:")
 print(best_log)
 print("Terminated after %d rounds. Best error bound = %.8E, best CR = %.4f, total time cost = %.4f" % (iteration, best_eb, best_cr,time_cost))

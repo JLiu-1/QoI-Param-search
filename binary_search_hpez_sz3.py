@@ -53,13 +53,44 @@ def binary_search(target,start,end, max_iter = 100):
     best_eb = start
     best_log = ""
     best_cr = 0
+    
+    eb = end
+    command = "%s -z -f -a -%d %s -i %s -o %s.hpez.out -M REL %.8E;%s -f -%d %s -i %s -o %s.hpez.out -c %s;rm -f %s*" % \
+    (args.cmp_command, numDims, dimSeq, inputName, pid, eb, args.val_command, numDims, dimSeq, inputName, pid, args.config, pid)        
+    time = 0
+#print(command)
+    with os.popen(command) as f:
+        log=f.read()
+        for line in log.splitlines():
+        #print(line)
+            if (not block_qoi) and "relative qoi error" in line:
+                rel_qoi_error = eval(line.split("=")[-1])
+            elif block_qoi and "L^infinity error of average" in line:
+                rel_qoi_error = eval(line.split("=")[-1])
+            if line[0] == "Q" and "QoI validation time" in line:
+                time += eval(line.split("=")[-1].split("s")[0])
+            if line[0] == "c" and "compression time" in line:
+                time += eval(line.split("=")[-1].split("s")[0])
+            if block_qoi and "RegionalQoI validation time" in line:
+                time += eval(line.split("=")[-1].split("s")[0])
+            if "compression ratio" in line:
+                cr = eval(line.split("=")[-1])
+    iteration += 1
+    print("Round %d, error bound = %.8E, CR = %.4f, QoI relative error = %.4E, time cost = %.4f" % (iteration, eb, cr, rel_qoi_error,time))
+    time_cost +=time
+
+    if rel_qoi_error <=ut*target:
+        best_eb = eb 
+        best_log = log 
+        best_cr = cr
+        return best_eb,best_cr, iteration,time_cost,best_log
+
     while 1:
         eb = (start+end)/2
         command = "%s -z -f -a -%d %s -i %s -o %s.hpez.out -M REL %.8E;%s -f -%d %s -i %s -o %s.hpez.out -c %s;rm -f %s*" % \
-        (args.cmp_command, numDims, dimSeq, inputName, pid, eb, args.val_command, numDims, dimSeq, inputName, pid, args.config, pid)        
-        time = 0
-        
+        (args.cmp_command, numDims, dimSeq, inputName, pid, eb, args.val_command, numDims, dimSeq, inputName, pid, args.config, pid)                
     #print(command)
+        time = 0
         with os.popen(command) as f:
             log=f.read()
             for line in log.splitlines():
@@ -81,9 +112,10 @@ def binary_search(target,start,end, max_iter = 100):
         time_cost +=time
 
         if rel_qoi_error <=ut*target:
-            best_eb = eb 
-            best_log = log 
-            best_cr = cr
+            if cr > best_cr:
+                best_eb = eb 
+                best_log = log 
+                best_cr = cr
 
 
         #print(rel_qoi_error,target)
