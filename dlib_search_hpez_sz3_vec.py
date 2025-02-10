@@ -80,8 +80,7 @@ def loss_function(eb):
             print("Terminated after %d rounds. Best error bound = %.8E, best CR = %.4f, total time cost = %.4f" % (iteration, best_eb, best_cr,time_cost))
             sys.exit()
             return 0
-    else: 
-        return scaling_factor*(rel_qoi_error-target)**2
+    return scaling_factor*(rel_qoi_error-target)**2
 
 _ = loss_function(ub)
 

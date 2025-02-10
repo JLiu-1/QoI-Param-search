@@ -89,8 +89,7 @@ def loss_function(rel_error_bound):
             print("Terminated after %d rounds. Best error bound = %.8E, best CR = %.4f, total time cost = %.4f" % (iteration, best_eb, best_cr,time_cost))
             sys.exit()
             return 0
-    else: 
-        return scaling_factor*(rel_qoi_error-target)**2
+    return scaling_factor*(rel_qoi_error-target)**2
 
 _ = loss_function(ub)
 best_eb,_ = find_min_global(loss_function,[lb],[ub],maxIter-1)#second: eb low bound, third: eb high bound
