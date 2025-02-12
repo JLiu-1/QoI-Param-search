@@ -3,6 +3,7 @@ import os
 import sys
 import argparse
 import numpy as np
+import uuid
 parser = argparse.ArgumentParser()
 
 
@@ -33,8 +34,8 @@ lb = args.lower_bound
 ut = args.upper_tol_rate
 lt = args.lower_tol_rate
 
-pid=os.getpid()
-
+#pid=os.getpid()
+pid = str(uuid.uuid1())
 target = QoIEB # target qoi error bound
 data_ranges=[0,0,0]
 for i in range(3):

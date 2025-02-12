@@ -2,7 +2,7 @@ import os
 from dlib import find_min_global
 import sys
 import argparse
-
+import uuid
 parser = argparse.ArgumentParser()
 
 
@@ -37,8 +37,8 @@ lt = args.lower_tol_rate
 
 iteration = 0
 time_cost = 0
-pid=os.getpid()
-
+#pid=os.getpid()
+pid = str(uuid.uuid1())
 block_qoi = False
 with open(args.config) as f:
     lines = f.read().splitlines()

@@ -3,6 +3,7 @@ from dlib import find_min_global
 import sys
 import argparse
 import numpy as np
+import uuid
 parser = argparse.ArgumentParser()
 
 
@@ -38,7 +39,8 @@ lt = args.lower_tol_rate
 
 iteration = 0
 time_cost = 0
-pid=os.getpid()
+#pid=os.getpid()
+pid = str(uuid.uuid1())
 data_ranges=[0,0,0]
 for i in range(3):
     idata = np.fromfile(inputNames[i],dtype=np.float32)
