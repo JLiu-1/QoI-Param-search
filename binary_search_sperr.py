@@ -124,7 +124,7 @@ def binary_search(target,start,end, max_iter = 100):
                 best_log = log 
                 best_cr = cr
         #print(rel_qoi_error,target)
-        if (rel_qoi_error >= lt*target and rel_qoi_error <=ut*target) or iteration>=max_iter or end-start<1e-15:
+        if (rel_qoi_error >= lt*target and rel_qoi_error <=ut*target) or iteration>=max_iter or end-start<1e-20:
             break
         if rel_qoi_error < target:
             start = eb 
