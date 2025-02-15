@@ -82,7 +82,7 @@ def loss_function(rel_error_bound):
     if rel_qoi_error <= ut*target:
         if cr > best_cr:
             best_cr = cr 
-            best_eb = eb
+            best_eb = rel_error_bound
             best_log = log
 
         if rel_qoi_error >= lt*target or rel_error_bound >= ub*0.99:
