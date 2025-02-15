@@ -76,7 +76,7 @@ def loss_function(rel_error_bound):
     br /= 3.0
     cr = 32.0/br
     iteration += 1
-    print("Round %d, error bound = %.8E, CR = %.4f, QoI relative error = %.8E, time cost = %.4f" % (iteration, eb, cr, rel_qoi_error,time))
+    print("Round %d, error bound = %.8E, CR = %.4f, QoI relative error = %.8E, time cost = %.4f" % (iteration, rel_error_bound, cr, rel_qoi_error,time))
     time_cost +=time
     #print(rel_qoi_error,target)
     if rel_qoi_error <= ut*target:
