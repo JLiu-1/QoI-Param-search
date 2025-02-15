@@ -75,7 +75,7 @@ def loss_function(eb):
             best_eb = eb
             best_log = log
 
-        if rel_qoi_error >= lt*target or rel_error_bound >= ub*0.99:
+        if rel_qoi_error >= lt*target or eb >= ub*0.99:
             print("Best compression log:")
             print(best_log)
             print("Terminated after %d rounds. Best error bound = %.8E, best CR = %.4f, total time cost = %.4f" % (iteration, best_eb, best_cr,time_cost))
